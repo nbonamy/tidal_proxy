@@ -60,10 +60,11 @@ wss.on('connection', (ws) => {
 server.listen(0, () => {
 
   // success
-  console.log(`Websocket opened on port ${server.address().port}`)
+  const port = server.address().port
+  console.log(`Websocket opened on port ${port}`)
 
   // advertise
-  const ad = createAdvertisement(tcp('tidalconnect'), server.address().port, {
+  const ad = createAdvertisement(tcp('tidalconnect'), port, {
     name: `${baseName}-${uid}`,
     txtRecord: {
       fn: settings.name,
