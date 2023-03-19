@@ -1,7 +1,7 @@
 
-const mdns = require('mdns')
+import { createBrowser, tcp, rst, dns_sd } from 'mdns'
 
-module.exports = class {
+export default class {
 
   constructor(cbUp, cbDown) {
     //this.ip = this._ipv4()
@@ -17,10 +17,10 @@ module.exports = class {
   _discover_by_type(device_type, service_type) {
 
     // getaddr fails: https://stackoverflow.com/questions/29589543/raspberry-pi-mdns-getaddrinfo-3008-error
-    const browser = mdns.createBrowser(mdns.tcp(service_type), { resolverSequence: [
-      mdns.rst.DNSServiceResolve(),
-      'DNSServiceGetAddrInfo' in mdns.dns_sd ? mdns.rst.DNSServiceGetAddrInfo() : mdns.rst.getaddrinfo({families:[4]}),
-      mdns.rst.makeAddressesUnique()
+    const browser = createBrowser(tcp(service_type), { resolverSequence: [
+      rst.DNSServiceResolve(),
+      'DNSServiceGetAddrInfo' in dns_sd ? rst.DNSServiceGetAddrInfo() : rst.getaddrinfo({families:[4]}),
+      rst.makeAddressesUnique()
     ]});
     browser.on('error', error => {
       console.log(error)

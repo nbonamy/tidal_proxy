@@ -1,10 +1,10 @@
 
-const YAML = require('yaml')
-const fs = require('fs')
+import { readFileSync } from 'fs'
+import { parse } from 'yaml'
 
-FILENAME = 'config.yml'
+const FILENAME = 'config.yml'
 
-module.exports = class {
+export default class {
 
   constructor() {
     this._init()
@@ -17,8 +17,8 @@ module.exports = class {
   _load() {
 
     try {
-      var config = fs.readFileSync(FILENAME, { encoding: 'utf8' })
-      Object.assign(this, YAML.parse(config))
+      var config = readFileSync(FILENAME, { encoding: 'utf8' })
+      Object.assign(this, parse(config))
     } catch (err) {
     }
 

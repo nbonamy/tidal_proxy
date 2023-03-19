@@ -1,15 +1,15 @@
-const Discoverer = require('./discoverer');
-const Config = require('./config')
-const Tidal = require('./tidal')
-const portfinder = require('portfinder')
-const mdns = require('mdns')
-const uuid = require('uuid')
-const ws = require('ws')
+import { createServer } from 'http'
+import { createAdvertisement, tcp } from 'mdns'
+import { WebSocket, WebSocketServer } from 'ws'
+import Discoverer from './discoverer.js'
+import Config from './config.js'
+import Tidal from './tidal.js'
+import { v4 } from 'uuid'
 
 const settings = new Config()
 
 const baseName = 'TIDAL Connect Proxy'
-const uid = uuid.v4()
+const uid = v4()
 
 let wss = null
 let target = null
@@ -31,44 +31,45 @@ new Discoverer((device) => {
 const proxy = function(message) {
   console.log(`-> ${message}`)
   wss.clients.forEach((client) => {
-    if (client.readyState === ws.WebSocket.OPEN) {
+    if (client.readyState === WebSocket.OPEN) {
       client.send(message)
     }
   })
 }
 
-// websocket
-portfinder.getPort((err, port) => {
+// create server
+const server = createServer()
+wss = new WebSocketServer({ server })
 
-  // start webserver
-  wss = new ws.WebSocketServer({ port: port }, () => {
+// our proxy
+wss.on('connection', (ws) => {
 
-    // success
-    console.log(`Websocket opened on port ${port}`)
+  ws.on('error', console.error)
 
-    // advertise
-    const ad = mdns.createAdvertisement(mdns.tcp('tidalconnect'), port, {
-      name: `${baseName}-${uid}`,
-      txtRecord: {
-        fn: settings.name,
-        id: uid,
-      }
-    });
-    ad.start();
-
+  ws.on('message', (data) => {
+    const message = data.toString()
+    console.log(`<- ${message}`)
+    target?.send(message)
   })
-  wss.on('connection', (ws) => {
 
-    ws.on('error', console.error)
+  ws.send(JSON.stringify({}))
 
-    ws.on('message', (data) => {
-      const message = data.toString()
-      console.log(`<- ${message}`)
-      target?.send(message)
-    })
+})
 
-    ws.send(JSON.stringify({}))
+// now start
+server.listen(0, () => {
 
-  })
+  // success
+  console.log(`Websocket opened on port ${server.address().port}`)
+
+  // advertise
+  const ad = createAdvertisement(tcp('tidalconnect'), server.address().port, {
+    name: `${baseName}-${uid}`,
+    txtRecord: {
+      fn: settings.name,
+      id: uid,
+    }
+  });
+  ad.start();
 
 })

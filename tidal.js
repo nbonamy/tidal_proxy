@@ -1,8 +1,8 @@
-const WebSocket = require('ws')
+import WebSocket from 'ws'
 
 const CONNECT_RETRY_DELAY = 5000
 
-module.exports = class {
+export default class {
 
   constructor(settings, device, callback) {
     this._settings = settings
